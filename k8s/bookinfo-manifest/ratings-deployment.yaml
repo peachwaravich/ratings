@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: bookinfo-dev-ratings
+  namespace: bookinfo-dev
+  labels:
+    app: bookinfo-dev-ratings
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookinfo-dev-ratings
+  template:
+    metadata:
+      labels:
+        app: bookinfo-dev-ratings
+    spec:
+      containers:
+      - image: peachwaravich/bookinfo:dev
+        name: bookinfo-dev-ratings
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: web-port
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+        env:
+        - name: SERVICE_VERSION
+          value: v2
+        - name: MONGO_DB_URL
+          value: mongodb://bookinfo-dev-ratings-mongodb:27017/ratings-service?authSource=admin
+        - name: MONGO_DB_USERNAME
+          value: root
+        - name: MONGO_DB_PASSWORD
+          valueFrom:
+            secretKeyRef: 
+              name: bookinfo-dev-ratings-mongodb-secret
+              key: mongodb-root-password
+      imagePullSecrets:
+      - name: registry-bookinfo
